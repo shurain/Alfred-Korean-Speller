@@ -11,7 +11,8 @@ url = 'http://speller.cs.pusan.ac.kr/'
 checker_url = '/lib/check.asp'
 
 r = requests.get(url)
-soup = BeautifulSoup(r.content)
+new_content = '\n'.join([k for k in r.content.split() if not k.startswith("<!--") and not k.endswith("-->")])
+soup = BeautifulSoup(new_content)
 
 frame_src = soup.find_all('frame')[0]['src'].split('/')[-2]
 
@@ -33,3 +34,5 @@ for x, y in zip(err, rep):
     print x.contents[0].encode('utf-8'),
     print "\n\t->",
     print '\n\t-> '.join([x for x in y.contents if type(x) != bs4.element.Tag]).encode('utf-8')
+else:
+    print "Done."
