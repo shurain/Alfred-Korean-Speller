@@ -12,7 +12,7 @@ checker_url = '/lib/check.asp'
 
 r = requests.get(url)
 new_content = '\n'.join([k for k in r.content.split() if not k.startswith("<!--") and not k.endswith("-->")])
-soup = BeautifulSoup(new_content)
+soup = BeautifulSoup(new_content, "html.parser")
 
 frame_src = soup.find_all('frame')[0]['src'].split('/')[-2]
 
@@ -25,7 +25,7 @@ q = q.encode('utf-8')
 
 r = requests.post(full_url, data={'text1': q})
 
-soup = BeautifulSoup(r.content)
+soup = BeautifulSoup(r.content, "html.parser")
 
 err = soup.find_all('td', id=lambda x: x and x.startswith('tdErrorWord_'))
 rep = soup.find_all('td', id=lambda x: x and x.startswith('tdReplaceWord_'))
