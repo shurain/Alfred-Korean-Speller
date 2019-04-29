@@ -1,38 +1,47 @@
 import sys
 import unicodedata
+from ast import literal_eval
 
 import requests
 from bs4 import BeautifulSoup
 import bs4
 
 
-# First, fetch current version of the speller
-url = 'http://speller.cs.pusan.ac.kr/'
-checker_url = '/lib/check.asp'
+def find_parens(s):
+    toret = {}
+    pstack = []
+    for i, c in enumerate(s):
+        if c == '[':
+            pstack.append(i)
+        elif c == ']':
+            if len(pstack) == 0:
+                raise IndexError("No matching closing parens at: " + str(i))
+            toret[pstack.pop()] = i
+    if len(pstack) > 0:
+        raise IndexError("No matching opening parens at: " + str(pstack.pop()))
+    return toret
 
-r = requests.get(url)
-new_content = '\n'.join([k for k in r.content.split() if not k.startswith("<!--") and not k.endswith("-->")])
-soup = BeautifulSoup(new_content, "html.parser")
-
-frame_src = soup.find_all('frame')[0]['src'].split('/')[-2]
-
-full_url = url + frame_src + checker_url
+full_url = "http://speller.cs.pusan.ac.kr/results"
 
 query = sys.argv[1]
-q = query.decode('utf-8')
+#q = query.decode('utf-8')
+q = query
 q = unicodedata.normalize("NFC", q)
-q = q.encode('utf-8')
+#q = q.encode('utf-8')
 
 r = requests.post(full_url, data={'text1': q})
 
-soup = BeautifulSoup(r.content, "html.parser")
+soup = BeautifulSoup(r.content, "lxml")
+# javascript portion
+s = soup.find_all('script')[-1].text
+paren_start = 39
+paren_end = find_parens(s)[paren_start]
 
-err = soup.find_all('td', id=lambda x: x and x.startswith('tdErrorWord_'))
-rep = soup.find_all('td', id=lambda x: x and x.startswith('tdReplaceWord_'))
-
-for x, y in zip(err, rep):
-    print x.contents[0].encode('utf-8'),
-    print "\n\t->",
-    print '\n\t-> '.join([x for x in y.contents if type(x) != bs4.element.Tag]).encode('utf-8')
+for x, y in [(k['orgStr'], k['candWord']) for k in literal_eval(s[paren_start:paren_end+1])[0]['errInfo']]:
+    #print("{}\n\t->".format(x.contents[0].encode('utf-8'))),
+    print("{}\n\t->{}\n".format(x, y))
+    # print("{}\n\t->".format(x)),
+    # #print("{}".format('\n\t-> '.join([x for x in y.contents if type(x) != bs4.element.Tag]).encode('utf-8')))
+    # print("{}".format('\n\t-> '.join([x for x in yif type(x) != bs4.element.Tag])))
 else:
-    print "Done."
+    print("Done.")
