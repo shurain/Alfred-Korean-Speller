@@ -35,13 +35,15 @@ soup = BeautifulSoup(r.content, "lxml")
 # javascript portion
 s = soup.find_all('script')[-1].text
 paren_start = 39
-paren_end = find_parens(s)[paren_start]
+paren_dict = find_parens(s)
 
-for x, y in [(k['orgStr'], k['candWord']) for k in literal_eval(s[paren_start:paren_end+1])[0]['errInfo']]:
-    #print("{}\n\t->".format(x.contents[0].encode('utf-8'))),
-    print("{}\n\t->{}\n".format(x, y))
-    # print("{}\n\t->".format(x)),
-    # #print("{}".format('\n\t-> '.join([x for x in y.contents if type(x) != bs4.element.Tag]).encode('utf-8')))
-    # print("{}".format('\n\t-> '.join([x for x in yif type(x) != bs4.element.Tag])))
+if paren_dict:
+    paren_end = paren_dict[paren_start]
+    for x, y in [(k['orgStr'], k['candWord']) for k in literal_eval(s[paren_start:paren_end+1])[0]['errInfo']]:
+        #print("{}\n\t->".format(x.contents[0].encode('utf-8'))),
+        print("{}\n\t->{}\n".format(x, y))
+        # print("{}\n\t->".format(x)),
+        # #print("{}".format('\n\t-> '.join([x for x in y.contents if type(x) != bs4.element.Tag]).encode('utf-8')))
+        # print("{}".format('\n\t-> '.join([x for x in yif type(x) != bs4.element.Tag])))
 else:
     print("Done.")
